@@ -35,14 +35,13 @@ public Action Hook_OnClientConnect(int iAccountID, const char[] sIp, const char[
 		return Plugin_Continue;
 	}
 
-	if (GetClientCount(false) < GetMaxHumanPlayers())
+	if (GetClientCount(false) <= GetMaxHumanPlayers())
 	{
 		return Plugin_Continue;	
 	}
 
-	int mod = iAccountID % 2;
 	char steamId[64];
-	FormatEx(steamId, sizeof(steamId), "STEAM_0:%d:%d", mod, (iAccountID - mod) / 2);
+	FormatEx(steamId, sizeof steamId, "STEAM_1:%d:%d", iAccountID & 1, iAccountID >>> 1);
 
 	AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, steamId);
 	if (admin == INVALID_ADMIN_ID)
@@ -138,7 +137,7 @@ int SelectKickClient()
 
 public void OnClientPostAdminCheck(int client)
 {
-	if (GetClientCount(false) > GetMaxHumanPlayers())
+	if (GetClientCount(false) >= GetMaxHumanPlayers())
 	{
 		if(GetUserAdmin(client).HasFlag(Admin_Reservation))
 		{
