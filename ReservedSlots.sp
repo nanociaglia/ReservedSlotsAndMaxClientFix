@@ -13,7 +13,7 @@ public Plugin myinfo =
 	name = "Reserved slots using PTaH and MaxClients Kicker",
 	author = "Nano. Merged and fixed luki1412 & Wilczek plugins.",
 	description = "Kick non-vips when a vip joins, and prevents players from exceeding the max-slots player limit.",
-	version = "1.0",
+	version = "1.1",
 	url = ""
 }
 
@@ -35,7 +35,7 @@ public Action Hook_OnClientConnect(int iAccountID, const char[] sIp, const char[
 		return Plugin_Continue;
 	}
 
-	if (GetClientCount(false) <= GetMaxHumanPlayers())
+	if (GetClientCount(false) < GetMaxHumanPlayers())
 	{
 		return Plugin_Continue;	
 	}
@@ -56,7 +56,6 @@ public Action Hook_OnClientConnect(int iAccountID, const char[] sIp, const char[
 		{
 			GetConVarString(g_hcvarReason, rejectReason, sizeof(rejectReason));
 			KickClientEx(target, "%s", rejectReason);
-			return Plugin_Handled;
 		}
 	}
 	return Plugin_Continue;
@@ -137,13 +136,14 @@ int SelectKickClient()
 
 public void OnClientPostAdminCheck(int client)
 {
+	if (!GetConVarInt(g_hcvarEnabled))
+	{
+		return;
+	}
+
 	if (GetClientCount(false) >= GetMaxHumanPlayers())
 	{
-		if(GetUserAdmin(client).HasFlag(Admin_Reservation))
-		{
-			return;
-		}
-		else 
+		if(!GetUserAdmin(client).HasFlag(Admin_Reservation))
 		{
 			CreateTimer(0.1, OnTimedKickForReject, GetClientUserId(client));
 		}
