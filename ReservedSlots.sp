@@ -13,14 +13,14 @@ public Plugin myinfo =
 	name = "Reserved slots using PTaH and MaxClients Kicker",
 	author = "Nano. Merged and fixed luki1412 & Wilczek plugins.",
 	description = "Kick non-vips when a vip joins, and prevents players from exceeding the max-slots player limit.",
-	version = "1.1",
+	version = "1.2",
 	url = ""
 }
 
 public void OnPluginStart()
 {
 	g_hcvarEnabled = CreateConVar("sm_reserved_slots_enabled", "1", "Enables/disables this plugin", FCVAR_NONE, true, 0.0, true, 1.0);
-	g_hcvarKickType = CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player", FCVAR_NONE, true, 1.0, true, 3.0);
+	g_hcvarKickType = CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player, 4 - Shortest connection time player", FCVAR_NONE, true, 1.0, true, 4.0);
 	g_hcvarReason = CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players", FCVAR_NONE);
 
 	AutoExecConfig(true, "ReservedSlots");
@@ -101,9 +101,13 @@ int SelectKickClient()
 				{
 					value = GetClientTime(i);
 				}
-				default:
+				case 3:
 				{
 					value = GetRandomFloat(0.0, 100.0);
+				}
+				case 4:
+				{
+					value = GetClientTime(i) * -1.0;
 				}
 			}
 
