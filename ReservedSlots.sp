@@ -4,24 +4,23 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-ConVar g_hcvarKickType;
-ConVar g_hcvarEnabled;
-ConVar g_hcvarReason;
+ConVar g_cKickType,	g_cPluginEnabled, g_cReason, g_cKickEnabled;
 
 public Plugin myinfo = 
 {
-	name = "Reserved slots using PTaH and MaxClients Kicker",
-	author = "Nano. Merged and fixed luki1412 & Wilczek plugins.",
+	name 		= "Reserved slots using PTaH and MaxClients Kicker",
+	author 		= "Nano. Merged and fixed luki1412 & Wilczek plugins.",
 	description = "Kick non-vips when a vip joins, and prevents players from exceeding the max-slots player limit.",
-	version = "1.2",
-	url = ""
+	version 	= "1.3",
+	url 		= ""
 }
 
 public void OnPluginStart()
 {
-	g_hcvarEnabled = CreateConVar("sm_reserved_slots_enabled", "1", "Enables/disables this plugin", FCVAR_NONE, true, 0.0, true, 1.0);
-	g_hcvarKickType = CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player, 4 - Shortest connection time player", FCVAR_NONE, true, 1.0, true, 4.0);
-	g_hcvarReason = CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players", FCVAR_NONE);
+	g_cPluginEnabled	=	CreateConVar("sm_reserved_slots_enabled", "1", "Enables/disables the whole plugin", FCVAR_NONE, true, 0.0, true, 1.0);
+	g_cKickType 		= 	CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player, 4 - Shortest connection time player", FCVAR_NONE, true, 1.0, true, 4.0);
+	g_cReason 			= 	CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players");
+	g_cKickEnabled 		= 	CreateConVar("sm_reserved_slots_kick", "1 - Enable VIP connect kick method only, 0 - Disable VIP connect kick method only."); //Request here https://forums.alliedmods.net/showpost.php?p=2710428&postcount=27
 
 	AutoExecConfig(true, "ReservedSlots");
 	
@@ -30,32 +29,30 @@ public void OnPluginStart()
 
 public Action Hook_OnClientConnect(int iAccountID, const char[] sIp, const char[] sName, char sPassword[128], char rejectReason[255])
 {
-	if (!GetConVarInt(g_hcvarEnabled))
+	if (!GetConVarInt(g_cPluginEnabled) || !g_cKickEnabled.BoolValue)
 	{
 		return Plugin_Continue;
 	}
 
-	if (GetClientCount(false) < GetMaxHumanPlayers())
+	if(GetClientCount(false) >= GetMaxHumanPlayers())
 	{
-		return Plugin_Continue;	
-	}
+		char steamId[64];
+		FormatEx(steamId, sizeof steamId, "STEAM_1:%d:%d", iAccountID & 1, iAccountID >>> 1);
 
-	char steamId[64];
-	FormatEx(steamId, sizeof steamId, "STEAM_1:%d:%d", iAccountID & 1, iAccountID >>> 1);
-
-	AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, steamId);
-	if (admin == INVALID_ADMIN_ID)
-	{
-		return Plugin_Continue;
-	}
-
-	if (GetAdminFlag(admin, Admin_Reservation))
-	{
-		int target = SelectKickClient();
-		if (target)
+		AdminId admin = FindAdminByIdentity(AUTHMETHOD_STEAM, steamId);
+		if (admin == INVALID_ADMIN_ID)
 		{
-			GetConVarString(g_hcvarReason, rejectReason, sizeof(rejectReason));
-			KickClientEx(target, "%s", rejectReason);
+			return Plugin_Continue;
+		}
+
+		if (GetAdminFlag(admin, Admin_Reservation))
+		{
+			int target = SelectKickClient();
+			if (target)
+			{
+				GetConVarString(g_cReason, rejectReason, sizeof(rejectReason));
+				KickClientEx(target, "%s", rejectReason);
+			}
 		}
 	}
 	return Plugin_Continue;
@@ -91,7 +88,7 @@ int SelectKickClient()
 			
 		if (IsClientInGame(i))
 		{
-			switch(GetConVarInt(g_hcvarKickType))
+			switch(GetConVarInt(g_cKickType))
 			{
 				case 1:
 				{
@@ -140,7 +137,7 @@ int SelectKickClient()
 
 public void OnClientPostAdminCheck(int client)
 {
-	if (!GetConVarInt(g_hcvarEnabled))
+	if (!GetConVarInt(g_cPluginEnabled))
 	{
 		return;
 	}
