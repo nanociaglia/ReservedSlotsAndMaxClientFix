@@ -4,23 +4,24 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-ConVar g_cKickType,	g_cPluginEnabled, g_cReason, g_cKickEnabled;
+ConVar g_cKickType,	g_cPluginEnabled, g_cKickReason ,g_cServerReason, g_cKickEnabled;
 
 public Plugin myinfo = 
 {
-	name 		= "Reserved slots using PTaH and MaxClients Kicker",
-	author 		= "Nano. Merged and fixed luki1412 & Wilczek plugins.",
-	description = "Kick non-vips when a vip joins, and prevents players from exceeding the max-slots player limit.",
-	version 	= "1.3",
-	url 		= ""
+	name 		= 	"Reserved slots using PTaH and MaxClients Kicker",
+	author 		= 	"Nano. Merged and fixed luki1412 & Wilczek plugins.",
+	description = 	"Kick non-vips when a vip joins, and prevents players from exceeding the max-slots player limit.",
+	version 	= 	"1.4",
+	url 		= 	"https://steamcommunity.com/id/marianzet1/"
 }
 
 public void OnPluginStart()
 {
 	g_cPluginEnabled	=	CreateConVar("sm_reserved_slots_enabled", "1", "Enables/disables the whole plugin", FCVAR_NONE, true, 0.0, true, 1.0);
+	g_cKickEnabled 		= 	CreateConVar("sm_reserved_slots_kick", "1", "1 - Enable VIP connect kick method only, 0 - Disable VIP connect kick method only."); //Request here https://forums.alliedmods.net/showpost.php?p=2710428&postcount=27
 	g_cKickType 		= 	CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player, 4 - Shortest connection time player", FCVAR_NONE, true, 1.0, true, 4.0);
-	g_cReason 			= 	CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players");
-	g_cKickEnabled 		= 	CreateConVar("sm_reserved_slots_kick", "1 - Enable VIP connect kick method only, 0 - Disable VIP connect kick method only."); //Request here https://forums.alliedmods.net/showpost.php?p=2710428&postcount=27
+	g_cKickReason		= 	CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players");
+	g_cServerReason		= 	CreateConVar("sm_reserved_slots_reason", "Server is full! Try to join later, please.", "Reason used when someone without privileges join");
 
 	AutoExecConfig(true, "ReservedSlots");
 	
@@ -50,7 +51,7 @@ public Action Hook_OnClientConnect(int iAccountID, const char[] sIp, const char[
 			int target = SelectKickClient();
 			if (target)
 			{
-				GetConVarString(g_cReason, rejectReason, sizeof(rejectReason));
+				GetConVarString(g_cKickReason, rejectReason, sizeof(rejectReason));
 				KickClientEx(target, "%s", rejectReason);
 			}
 		}
@@ -154,12 +155,14 @@ public void OnClientPostAdminCheck(int client)
 public Action OnTimedKickForReject(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
+	char sKickReason[255];
 	
 	if (!client || !IsClientInGame(client))
 	{
 		return Plugin_Handled;
 	}
 	
-	KickClient(client, "Server is full! Try to join later, please.");
+	GetConVarString(g_cServerReason, sKickReason, sizeof(sKickReason));
+	KickClient(client, "%s", sKickReason);
 	return Plugin_Handled;
 }
