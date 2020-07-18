@@ -21,7 +21,7 @@ public void OnPluginStart()
 	g_cKickEnabled 		= 	CreateConVar("sm_reserved_slots_kick", "1", "1 - Enable VIP connect kick method only, 0 - Disable VIP connect kick method only."); //Request here https://forums.alliedmods.net/showpost.php?p=2710428&postcount=27
 	g_cKickType 		= 	CreateConVar("sm_reserved_slots_type", "1", "Who gets kicked out: 1 - Highest ping player, 2 - Longest connection time player, 3 - Random player, 4 - Shortest connection time player", FCVAR_NONE, true, 1.0, true, 4.0);
 	g_cKickReason		= 	CreateConVar("sm_reserved_slots_reason", "You were kicked because a VIP joined.", "Reason used when kicking players");
-	g_cServerReason		= 	CreateConVar("sm_reserved_slots_reason", "Server is full! Try to join later, please.", "Reason used when someone without privileges join");
+	g_cServerReason		= 	CreateConVar("sm_reserved_slots_fullserverreason", "Server is full! Try to join later, please.", "Reason used when someone without privileges join");
 
 	AutoExecConfig(true, "ReservedSlots");
 	
